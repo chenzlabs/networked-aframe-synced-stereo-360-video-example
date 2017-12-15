@@ -1,5 +1,6 @@
-AFRAME.registerComponent('video-transport', {
+AFRAME.registerComponent('video-src-transport', {
   schema: {
+    src: {default: ''},
     paused: {default: false},
     currentTime: {default: 0},
     timeSlop: {default: 0.5}
@@ -14,6 +15,11 @@ AFRAME.registerComponent('video-transport', {
     // Get the video element.
     var videoElement = this.getVideoElement();
 
+    // If paused state is out of sync, take appropriate action.
+    if (this.data.src !== videoElement.src) {
+      videoElement.src = this.data.src;
+    }
+    
     // If paused state is out of sync, take appropriate action.
     if (this.data.paused !== videoElement.paused) {
       this.data.paused ? videoElement.pause() : videoElement.play();
@@ -48,6 +54,9 @@ AFRAME.registerComponent('video-transport', {
     // Read transport data values from the video element.
     // NOTE: Apparently, we can change the data without going through setAttribute,
     // which should not cause update() to fire, and the values still sync properly.          
+    if (this.data.src !== videoElement.src) {
+      this.data.src = videoElement.src;
+    }          
     if (this.data.paused !== videoElement.paused) {
       this.data.paused = videoElement.paused;
     }          
