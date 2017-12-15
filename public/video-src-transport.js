@@ -1,7 +1,7 @@
 AFRAME.registerComponent('video-src-transport', {
   schema: {
     src: {default: ''},
-    paused: {default: false},
+    paused: {default: true},
     currentTime: {default: 0},
     timeSlop: {default: 0.5}
   },

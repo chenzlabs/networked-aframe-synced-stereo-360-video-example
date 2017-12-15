@@ -12,7 +12,7 @@ Creating singleton objects in networked-aframe is not yet encapsulated in a comp
 
 In order to play the stereo 360 video back correctly, rather than making separate videospheres for each eye, this example uses a single videosphere with a custom shader that presents the appropriate portion of the video to the proper eye when required.
 
-(Updated to place the video at eye height when in VR.)
+(Updated to place the video at eye height when in VR, and also to sync the shader used so that both mono and stereo 360 can be supported, for example.)
 
 Enjoy!
 - M
