@@ -30,6 +30,13 @@
             property: 'src'
           },
 */        
+          // This synchronizes the shader, which may change depending on video.
+          {
+            selector: '.front',
+            component: 'material',
+            property: 'shader'
+          },
+          
           // This works but needs care when syncing, to avoid continual resync.
           {
             selector: '.front',
@@ -73,7 +80,7 @@
         <script id="singleton-template" type="text/html">
           <a-entity>
             <a-videosphere class="front"
-              video-src-transport="paused:true" 
+              video-src-transport
               rotation="0 -90 0"
               material="shader:top-bottom"
               src="#video"></a-videosphere>
@@ -104,7 +111,12 @@
     <script>      
       var videoSrcs = [
         "https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-1080p-h264-aac.mp4",
-        "http://player.with.in/302-MR_ROBOT/video/mr_robot-v3-WEBPLAYER_PROGRESSIVE-stereo-4096x2048H.mp4"
+        "https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4"
+        //"http://player.with.in/302-MR_ROBOT/video/mr_robot-v3-WEBPLAYER_PROGRESSIVE-stereo-4096x2048H.mp4"
+      ];
+      var videoShaders = [
+        "top-bottom",
+        "flat"
       ];
       var whichVideo = -1;
       
@@ -145,6 +157,7 @@
                 currentTime: 0,
                 paused: false
               });
+              video.setAttribute('material', 'shader', videoShaders[whichVideo]);
               document.querySelector('#hud').setAttribute('text', 'value', 'Click to pause.');
             } else {
               // Pause.
