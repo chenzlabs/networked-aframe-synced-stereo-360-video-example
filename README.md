@@ -4,7 +4,7 @@
 
 This example was built with [Networked-A-Frame](https://github.com/networked-aframe/networked-aframe), a web framework for building multi-user virtual reality experiences. Works on Vive, Rift, desktop, mobile platforms.
 
-The approach taken here is to statically define a singleton video as part of the scene and expose the video's transport characteristics with a custom component `video-transport`, so that networked-aframe can handle the data synchronization.
+The approach taken here is to statically define a singleton video as part of the scene and expose the video's transport characteristics with a custom component `video-src-transport`, so that networked-aframe can handle the data synchronization.
 
 When trying to synchronize video position, care needs to be taken to avoid repeatedly trying to match exactly, but always failing to keep up due to buffer fetch, etc.  Improvements to the crude algorithm are clearly possible; during normal operation, video position updates should be quite predictable.
 

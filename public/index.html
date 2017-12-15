@@ -9,7 +9,7 @@
     <script src="easyrtc/easyrtc.js"></script>
         
     <!-- Use a custom component to expose properties to networked-aframe. -->
-    <script src="video-transport.js"></script>
+    <script src="video-src-transport.js"></script>
 
     <!-- Use a custom shader to display the stereo 360 video eve views properly. -->
     <script src="top-bottom.js"></script>
@@ -33,7 +33,14 @@
           // This works but needs care when syncing, to avoid continual resync.
           {
             selector: '.front',
-            component: 'video-transport',
+            component: 'video-src-transport',
+            property: 'src'
+          },
+          
+          // This works but needs care when syncing, to avoid continual resync.
+          {
+            selector: '.front',
+            component: 'video-src-transport',
             property: 'currentTime'
           },
           
@@ -42,7 +49,7 @@
           // or else the play will fail due to the end position.
           {
             selector: '.front',
-            component: 'video-transport',
+            component: 'video-src-transport',
             property: 'paused'
           }
         ]
@@ -57,8 +64,7 @@
       <a-assets>
         <!-- This particular demo video needs crossorigin etc. -->
         <video id="video" 
-               src="https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-1080p-h264-aac.mp4"
-               crossorigin="anonymous" autoplay playsinline="playsinline" loop></video>
+               crossorigin="anonymous" autoplay="false" playsinline="playsinline" loop></video>
         
         <!-- Templates -->
 
@@ -67,7 +73,7 @@
         <script id="singleton-template" type="text/html">
           <a-entity>
             <a-videosphere class="front"
-              video-transport 
+              video-src-transport="paused:true" 
               rotation="0 -90 0"
               material="shader:top-bottom"
               src="#video"></a-videosphere>
@@ -85,9 +91,23 @@
       <a-entity class="singleton" position="0 1.6 0" 
                 networked="template:#singleton-template;networkId:singleton;owner:nobody">
       </a-entity>      
+      
+      <a-camera>
+        <a-text id="hud" 
+                color="red" 
+                align="center"
+                value="Thanks for joining.  Click to play if needed."
+                position="0 1.6 -2"></a-text>
+      </a-camera>
     </a-scene>
 
     <script>      
+      var videoSrcs = [
+        "https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-1080p-h264-aac.mp4",
+        "http://player.with.in/302-MR_ROBOT/video/mr_robot-v3-WEBPLAYER_PROGRESSIVE-stereo-4096x2048H.mp4"
+      ];
+      var whichVideo = -1;
+      
       function onConnect () {
         // The first client is the NOT only one that sees no other clients after connection,
         // so it is NOT safe to take ownership of singletons immediately upon onConnect.
@@ -103,9 +123,50 @@
             .map(function (el) {
               // Take ownership.
               el.setAttribute('networked', 'owner', NAF.clientId);
-              console.warn('Took ownership as ', NAF.clientId, ' of ', el);
-            });
+              console.warn('Took ownership as ', NAF.clientId, ' of ', el);            
+              document.querySelector('#hud').setAttribute('text', 'value', 'Click to play next.');
+          });
         }, 500);
+
+        // Install click handler, which does different things for leader and followers.
+        window.addEventListener('click', function () {
+          var video = document.querySelector('[video-src-transport]');
+          var transAttr = video.getAttribute('video-src-transport');
+          var isOwner = document.querySelector('.singleton[networked]').getAttribute('networked').owner === NAF.clientId;
+          
+          // If we are the owner of the singleton video,
+          // our click should control play next / pause.
+          if (isOwner) {
+            if (transAttr.paused) {
+              // Pick the next one and play.
+              if (++whichVideo >= videoSrcs.length) { whichVideo = 0; }
+              video.setAttribute('video-src-transport', {
+                src: videoSrcs[whichVideo],
+                currentTime: 0,
+                paused: false
+              });
+              document.querySelector('#hud').setAttribute('text', 'value', 'Click to pause.');
+            } else {
+              // Pause.
+              video.setAttribute('video-src-transport', {
+                src: transAttr.src,
+                currentTime: transAttr.currentTime,
+                paused: true
+              });
+              document.querySelector('#hud').setAttribute('text', 'value', 'Click to play next.');
+            }            
+          } else {
+            // If we're not the owner,
+            if (transAttr.paused) {
+              // If we should be playing but aren't, start playing.
+              var videoEl = video.components['video-src-transport'].getVideoElement();
+              if (!transAttr.paused && videoEl && videoEl.paused) {
+                videoEl.play();
+                document.querySelector('#hud').setAttribute('text', 'value', 'Thanks for joining.');
+              }
+            }            
+          }
+        });
         
         document.body.addEventListener('clientConnected', function (evt) {
           console.warn('clientConnected ', evt.detail.clientId);          
